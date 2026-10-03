@@ -113,7 +113,7 @@ export async function renderPost(
     ctx.strokeRect(62, 62, W - 124, H - 124);
     const colors = ["#ffd23f", accent, "#ff9bd2", "#7ce0c3"];
     for (let i = 0; i < 70; i++) {
-      ctx.fillStyle = colors[i % 4];
+      ctx.fillStyle = colors[i % 4]!;
       const x = (i * 157) % W;
       const yy = (i * 89) % 380;
       ctx.beginPath();

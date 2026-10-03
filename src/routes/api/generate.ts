@@ -30,7 +30,7 @@ export const Route = createFileRoute("/api/generate")({
         const now = Date.now();
         const recent = (hits.get(ip) ?? []).filter((t) => now - t < WINDOW_MS);
         if (recent.length >= LIMIT) {
-          const mins = Math.ceil((WINDOW_MS - (now - recent[0])) / 60000);
+          const mins = Math.ceil((WINDOW_MS - (now - recent[0]!)) / 60000);
           return json({ error: `You've reached 10 posts this hour. Try again in ${mins} min.` }, 429);
         }
 
@@ -47,7 +47,7 @@ export const Route = createFileRoute("/api/generate")({
         recent.push(now);
         hits.set(ip, recent);
 
-        const apiKey = process.env.LOVABLE_API_KEY;
+        const apiKey = process.env["LOVABLE_API_KEY"];
         if (!apiKey) return json({ error: "AI is not configured." }, 500);
         try {
           const result = await generatePost(parsed.data, apiKey, request.signal);
