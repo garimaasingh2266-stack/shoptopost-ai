@@ -8,3 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Post image is composed client-side on a canvas (src/lib/render-post.ts) so template switching is instant; AI (server route /api/generate) only writes text.
+- Generation rate limit is an in-memory per-IP map in the server route — simple, resets on worker restart.
