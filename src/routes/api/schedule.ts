@@ -58,12 +58,12 @@ export const Route = createFileRoute("/api/schedule")({
         const up = await supabaseAdmin.storage.from("posts").upload(path, bytes, { contentType: "image/jpeg" });
         if (up.error) {
           console.error("upload failed", up.error);
-          return json({ error: "Couldn't save the image. Please try again." }, 502);
+          return json({ error: `Couldn't save the image: ${up.error.message}` }, 502);
         }
         const signed = await supabaseAdmin.storage.from("posts").createSignedUrl(path, LINK_SECONDS);
         if (signed.error || !signed.data) {
           console.error("sign failed", signed.error);
-          return json({ error: "Couldn't create the image link. Please try again." }, 502);
+          return json({ error: `Couldn't create the image link: ${signed.error?.message ?? "unknown error"}` }, 502);
         }
 
         const post_time = when.toISOString();
@@ -74,12 +74,13 @@ export const Route = createFileRoute("/api/schedule")({
             body: JSON.stringify({ image_url: signed.data.signedUrl, caption, post_time }),
           });
           if (!res.ok) {
-            console.error("webhook failed", res.status, await res.text().catch(() => ""));
-            return json({ error: "The scheduler didn't accept the post. Please try again." }, 502);
+            const t = (await res.text().catch(() => "")).slice(0, 300);
+            console.error("webhook failed", res.status, t);
+            return json({ error: `Make rejected the post (status ${res.status})${t ? `: ${t}` : ""}` }, 502);
           }
         } catch (e) {
           console.error("webhook error", e);
-          return json({ error: "Couldn't reach the scheduler. Please try again." }, 502);
+          return json({ error: `Couldn't reach Make: ${e instanceof Error ? e.message : String(e)}` }, 502);
         }
         return json({ ok: true, post_time });
       },
