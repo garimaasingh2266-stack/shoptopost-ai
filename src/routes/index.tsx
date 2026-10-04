@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState, type RefObject } from "react";
+import { useEffect, useRef, useState } from "react";
+import { ScheduleCard } from "@/components/ScheduleCard";
 import { Check, Copy, Download, ImagePlus, Sparkles, Clock, Wand2, AlertCircle } from "lucide-react";
 import { renderPost, type Template } from "@/lib/render-post";
 import type { PostResult } from "@/lib/generate.server";
