@@ -35,12 +35,17 @@ export const Route = createFileRoute("/api/schedule")({
         if (!parsed.success) return json({ error: parsed.error.issues[0]?.message ?? "Invalid input." }, 400);
         const { passcode, image, caption, postTime } = parsed.data;
 
-        const secret = process.env["SCHEDULE_PASSCODE"];
-        if (!secret || !passcode || !same(passcode, secret)) {
+        const secret = (process.env["SCHEDULE_PASSCODE"] ?? "").trim();
+        const given = passcode.trim();
+        if (!secret) {
+          console.error("SCHEDULE_PASSCODE is not set on the server");
+          return json({ error: "Scheduling isn't set up: the passcode secret is missing on the server." }, 500);
+        }
+        if (!given || !same(given, secret)) {
           return json({ error: "Scheduling is disabled in demo mode." }, 403);
         }
-        const webhook = process.env["MAKE_WEBHOOK_URL"];
-        if (!webhook) return json({ error: "Scheduling isn't set up yet." }, 500);
+        const webhook = (process.env["MAKE_WEBHOOK_URL"] ?? "").trim();
+        if (!webhook) return json({ error: "Scheduling isn't set up: the Make webhook link is missing on the server." }, 500);
 
         const when = postTime ? new Date(postTime) : new Date();
         if (postTime && when.getTime() < Date.now() - 60_000) return json({ error: "Please pick a time in the future." }, 400);
@@ -53,12 +58,12 @@ export const Route = createFileRoute("/api/schedule")({
         const up = await supabaseAdmin.storage.from("posts").upload(path, bytes, { contentType: "image/jpeg" });
         if (up.error) {
           console.error("upload failed", up.error);
-          return json({ error: "Couldn't save the image. Please try again." }, 502);
+          return json({ error: `Couldn't save the image: ${up.error.message}` }, 502);
         }
         const signed = await supabaseAdmin.storage.from("posts").createSignedUrl(path, LINK_SECONDS);
         if (signed.error || !signed.data) {
           console.error("sign failed", signed.error);
-          return json({ error: "Couldn't create the image link. Please try again." }, 502);
+          return json({ error: `Couldn't create the image link: ${signed.error?.message ?? "unknown error"}` }, 502);
         }
 
         const post_time = when.toISOString();
@@ -69,12 +74,13 @@ export const Route = createFileRoute("/api/schedule")({
             body: JSON.stringify({ image_url: signed.data.signedUrl, caption, post_time }),
           });
           if (!res.ok) {
-            console.error("webhook failed", res.status, await res.text().catch(() => ""));
-            return json({ error: "The scheduler didn't accept the post. Please try again." }, 502);
+            const t = (await res.text().catch(() => "")).slice(0, 300);
+            console.error("webhook failed", res.status, t);
+            return json({ error: `Make rejected the post (status ${res.status})${t ? `: ${t}` : ""}` }, 502);
           }
         } catch (e) {
           console.error("webhook error", e);
-          return json({ error: "Couldn't reach the scheduler. Please try again." }, 502);
+          return json({ error: `Couldn't reach Make: ${e instanceof Error ? e.message : String(e)}` }, 502);
         }
         return json({ ok: true, post_time });
       },
