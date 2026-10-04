@@ -35,12 +35,17 @@ export const Route = createFileRoute("/api/schedule")({
         if (!parsed.success) return json({ error: parsed.error.issues[0]?.message ?? "Invalid input." }, 400);
         const { passcode, image, caption, postTime } = parsed.data;
 
-        const secret = process.env["SCHEDULE_PASSCODE"];
-        if (!secret || !passcode || !same(passcode, secret)) {
+        const secret = (process.env["SCHEDULE_PASSCODE"] ?? "").trim();
+        const given = passcode.trim();
+        if (!secret) {
+          console.error("SCHEDULE_PASSCODE is not set on the server");
+          return json({ error: "Scheduling isn't set up: the passcode secret is missing on the server." }, 500);
+        }
+        if (!given || !same(given, secret)) {
           return json({ error: "Scheduling is disabled in demo mode." }, 403);
         }
-        const webhook = process.env["MAKE_WEBHOOK_URL"];
-        if (!webhook) return json({ error: "Scheduling isn't set up yet." }, 500);
+        const webhook = (process.env["MAKE_WEBHOOK_URL"] ?? "").trim();
+        if (!webhook) return json({ error: "Scheduling isn't set up: the Make webhook link is missing on the server." }, 500);
 
         const when = postTime ? new Date(postTime) : new Date();
         if (postTime && when.getTime() < Date.now() - 60_000) return json({ error: "Please pick a time in the future." }, 400);
