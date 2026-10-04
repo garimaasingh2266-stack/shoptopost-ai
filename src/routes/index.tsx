@@ -260,6 +260,8 @@ function Index() {
                   <p className="text-sm text-muted-foreground">{result.bestTime.reason}</p>
                 </div>
               </div>
+
+              <ScheduleCard result={result} canvasRef={canvasRef} />
             </>
           )}
         </div>
