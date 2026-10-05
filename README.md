@@ -1,44 +1,26 @@
-# Shop Post Creator
+# Shop to Post
+AI-generated Instagram posts for small local shops, auto-published on schedule.
 
-Build a web app called "Shop to Post" for small local businesses (salons, gyms, cafes, clothing shops). Single page, no login.
+Local shop owners know they should post on Instagram but have no time, designer, or copywriter. Shop to Post turns one product photo and one line about the offer into a ready-to-publish post, and schedules it straight to Instagram.
 
-Inputs: upload a product photo, one line about the offer (e.g. "new summer kurtis, 20% off"), business name, and a business type dropdown.
+**Live app:** https://shoptopost-ai.lovable.app
+**Demo Instagram:** https://instagram.com/shoptopost.demo
+(every post on that profile was created and published by this app)
 
-On "Create post", use AI to generate:
+## How it works
+1. Upload a product photo, type the offer (e.g. "Festive kurti set, now ₹1,800"), pick the business type
+2. AI generates a styled post image (3 templates), 3 captions in different tones, 10 hashtags, and a best time to post
+3. Pick a caption, choose "Post now" or a date and time
+4. The app sends the post to a Make webhook, which adds it to a Google Sheets queue
+5. A second Make scenario picks up due posts, publishes them via the Instagram Graph API, and marks them as posted
 
-1. A finished Instagram post image (1080x1350): the uploaded photo with the business name and offer text overlaid in a bold, styled design. Offer 3 style templates to switch between (Bold, Minimal, Festive).
+## Tech
+React · TypeScript · Tailwind · Supabase Edge Functions · Make · Google Sheets · Instagram Graph API · AI model for content
+Built with Lovable (AI-assisted coding).
 
-2. Three caption options in different tones (Fun, Premium, Urgent), each with a call to action.
-
-3. 10 relevant hashtags, including local ones.
-
-4. A suggested best day and time to post, with a one-line reason.
-
-Show a before/after view of the photo, copy buttons for each caption and the hashtags, and a "Download image" button. Add a "Try an example" button that loads a sample product so it works instantly. Show a loading animation while generating and a clear error message if the AI call fails.
-
-Security: keep all API keys server-side, validate uploads (images only, max 5MB), and limit to 10 generations per visitor per hour.
-
-Design: bright, modern, mobile-friendly, cards for each output, one accent color.
-
-This project was built with [Lovable](https://lovable.dev).
-
-**Live app**: https://shoptopost-ai.lovable.app
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/35d32908-1bc1-46ae-89c4-7e0ffcc9ec7c).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
+## Security
+- API keys and the webhook URL are stored server-side as secrets, never in the frontend
+- Scheduling is passcode-protected, so public visitors can generate posts but can't publish to the account
+- Uploads are validated (images only, max 5MB)
+- Rate limited to 10 generations per visitor per hour
+- Images are served through signed links that expire after 30 days
